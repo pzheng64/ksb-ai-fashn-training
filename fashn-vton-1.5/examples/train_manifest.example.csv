@@ -1,0 +1,2 @@
+person_image,garment_image,target_image,category,garment_photo_type
+data/model.webp,data/garment.webp,data/model.webp,tops,model
