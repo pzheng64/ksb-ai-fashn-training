@@ -4,6 +4,16 @@ FASHN VTON v1.5 training setup. Model code is in `fashn-vton-1.5/`. Linux packag
 
 Remote: https://github.com/pzheng64/ksb-ai-fashn-training
 
+## What the training code does
+
+`scripts/train.py` fine-tunes `TryOnModel` from `model.safetensors`. `scripts/train_from_scratch.py` starts from random weights. Both read a CSV of person, garment, and target photos (`person_image`, `garment_image`, `target_image`, `category`).
+
+DWPose and the human parser stay frozen. They build the same inputs inference uses: a clothing-agnostic person image, the garment image, pose maps, and the garment category. The target photo is the image the model is trained to reach.
+
+The loss is rectified flow. A random timestep mixes Gaussian noise with the target, and the model predicts the straight-line velocity from that noise to the target. The objective is mean squared error. About 10% of steps drop the condition so classifier-free guidance still works at inference. The optimizer is AdamW with a warmup-cosine learning rate. On CUDA the weights run in bfloat16. From-scratch training also keeps an exponential moving average of the weights (decay 0.9999).
+
+Saved files go in `--output-dir`: `train_state_*.pt` can resume a run, and `model_finetune_last.safetensors` or `model_scratch_last.safetensors` is the weight file.
+
 ## What was set up
 
 - Collected the Ubuntu and Python packages the training code needs: Python 3.12, PyTorch `2.11.0+cu128`, and the CUDA 12.8 wheels. Packages already present in `C:\dev\ksb-ai\offline` were reused. The only new download was `fashn-human-parser` 0.1.1.
